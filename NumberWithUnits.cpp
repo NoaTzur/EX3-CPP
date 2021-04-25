@@ -1,4 +1,3 @@
-
 #include <string>
 #include <iostream>
 #include <map>
@@ -7,7 +6,7 @@
 
 #include "NumberWithUnits.hpp"
 using namespace std;
-#define EPSILON 0.01
+const double EPSILON = 0.01;
 
 
 namespace ariel {
@@ -16,6 +15,7 @@ namespace ariel {
 
     //this function update the unit dimension according to the units map !
     int NumberWithUnits::checks_dimension(string unit_name){
+
         map<string, nu_cell>::iterator it;
 
         for (it = _units_map.begin(); it != _units_map.end(); it++)
@@ -73,8 +73,6 @@ namespace ariel {
 
             _units_map[from] = nu;
 
-            cout << "from: " << from << " to: " << to;
-            cout << "" << endl;
         }
         return file;
     }
@@ -97,6 +95,9 @@ namespace ariel {
 
     //converting the unit=> a + b => a=to , b=from.  respectively the rules we got
     double NumberWithUnits::convert(const NumberWithUnits &to, const NumberWithUnits &from){
+      
+
+        bool flag = false;
 
         if (NumberWithUnits::_units_map[from._unit_name]._to == to._unit_name)
         {
@@ -116,7 +117,8 @@ namespace ariel {
             src1 = NumberWithUnits::_units_map[src1]._to;
 
             if (src1.empty())
-            {
+            {   
+                ans=1;
                 break;
             }
             
@@ -134,6 +136,7 @@ namespace ariel {
 
             if (src2.empty())
             {
+                ans=1;
                 break;
             }
             
@@ -141,8 +144,18 @@ namespace ariel {
 
         if (src2 == to._unit_name)
         {
+            
             return ans;
         }
+        
+        
+        if (NumberWithUnits::_units_map[to._unit_name]._to == NumberWithUnits::_units_map[from._unit_name]._to)
+        {   
+
+            ans = to._unit_num/from._unit_num;
+        }
+            
+        
         return ans;
         
 
@@ -220,7 +233,7 @@ namespace ariel {
     istream& operator>> (istream& input, NumberWithUnits& n) {
 
         double num=0;
-        char bracket;
+        char bracket=0;
         string name;
 
         // remember place for rewinding (back to this point)
@@ -239,7 +252,7 @@ namespace ariel {
         }           
         
         n._unit_dim = NumberWithUnits::checks_dimension(name);
-        if (flag == true || n._unit_dim <= 0)
+        if (flag || n._unit_dim <= 0)
         {
             //if an error ocuured -  rewind the input pointer
             auto errorState = input.rdstate(); // remember error state
@@ -291,13 +304,10 @@ namespace ariel {
 
         double ratio = NumberWithUnits::convert(n1, n2);
         double a =abs(n1._unit_num - (n2._unit_num*ratio));
-        if (a < EPSILON)
-        {
-            
-            return true;
-        }
+       
+        return (a < EPSILON);
+
         
-        return false;
 
     }
     
@@ -323,13 +333,10 @@ namespace ariel {
             return false;
         }
 
-        double ratio = NumberWithUnits::convert(n1, n2);
     
-        if (n1._unit_num < (n2._unit_num*ratio))
-        {
-            return true;
-        }
-        return false;
+        double ratio = NumberWithUnits::convert(n1, n2);
+
+        return (n1._unit_num < (n2._unit_num*ratio));
 
     }
     
@@ -352,11 +359,8 @@ namespace ariel {
 
         double ratio = NumberWithUnits::convert(n1, n2);
     
-        if (n1._unit_num > (n2._unit_num*ratio))
-        {
-            return true;
-        }
-        return false;
+        return (n1._unit_num > (n2._unit_num*ratio));
+        
 
     }
 
@@ -377,12 +381,9 @@ namespace ariel {
         }
 
         double ratio = NumberWithUnits::convert(n1, n2);
-        int a = abs(n1._unit_num - (n2._unit_num*ratio)); 
-        if (a < EPSILON || n1._unit_num < n2._unit_num*ratio)
-        {
-            return true;
-        }
-        return false;
+        double a = abs(n1._unit_num - (n2._unit_num*ratio)); 
+        return (a < EPSILON || n1._unit_num < n2._unit_num*ratio);
+        
 
     }
 
@@ -404,11 +405,9 @@ namespace ariel {
         }
 
         double ratio = NumberWithUnits::convert(n1, n2);
-        if (n1._unit_num >= (n2._unit_num*ratio))
-        {
-            return true;
-        }
-        return false;
+        double a =abs(n1._unit_num - (n2._unit_num*ratio));
+        return (n1._unit_num > (n2._unit_num*ratio) || a < EPSILON);
+        
 
     }
 
